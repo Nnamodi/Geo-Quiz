@@ -1,8 +1,10 @@
 package com.bignerdranch.android.geoquiz
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -13,31 +15,39 @@ import androidx.lifecycle.ViewModelProvider
 private const val TAG = "CheatActivity"
 const val EXTRA_ANSWER_SHOWN = "com.bignerdranch.android.geoquiz.answer_shown"
 private const val EXTRA_ANSWER_IS_TRUE = "com.bignerdranch.android.geoquiz.answer_is_true"
-private const val ANSWER_IS_TRUE = "correct_answer"
 
 class CheatActivity : AppCompatActivity() {
     private lateinit var answerTextView: TextView
     private lateinit var showAnswerButton: Button
+    private lateinit var apiLevel: TextView
+    private var answerIsTrue = false
     private val cheatViewModel: QuizViewModel by lazy {
         ViewModelProvider(this).get(QuizViewModel::class.java)
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.d(TAG, "onCreate(Bundle?) is called")
         setContentView(R.layout.activity_cheat)
-        cheatViewModel.answerIsTrue = intent.getBooleanExtra(EXTRA_ANSWER_IS_TRUE, false)
+        val cheatStatus = savedInstanceState?.getBoolean(CHEAT, false) ?: false
+        setAnswerShownResult(cheatStatus)
+        answerIsTrue = intent.getBooleanExtra(EXTRA_ANSWER_IS_TRUE, false)
         answerTextView = findViewById(R.id.answer_text_view)
         showAnswerButton = findViewById(R.id.show_answer_button)
+        apiLevel = findViewById(R.id.api_level)
         showAnswerButton.setOnClickListener {
             val answerText = when {
-                cheatViewModel.answerIsTrue -> R.string.true_button
+                answerIsTrue -> R.string.true_button
                 else -> R.string.false_button
             }
             answerTextView.setText(answerText)
             setAnswerShownResult()
             showAnswerButton.isEnabled = false
+            cheatViewModel.cheatStatus = true
         }
+        val buildNumber = Build.VERSION.SDK_INT
+        apiLevel.text = "API Level: $buildNumber"
     }
 
     override fun onStart() {
@@ -57,8 +67,8 @@ class CheatActivity : AppCompatActivity() {
 
     override fun onSaveInstanceState(savedInstanceState: Bundle) {
         super.onSaveInstanceState(savedInstanceState)
-        Log.i(TAG, "onSavedInstanceState called")
-        savedInstanceState.putBoolean(ANSWER_IS_TRUE, cheatViewModel.answerIsTrue)
+        Log.i(CHEAT, "onSavedInstanceState called")
+        savedInstanceState.putBoolean(CHEAT, cheatViewModel.cheatStatus)
     }
 
     override fun onStop() {
