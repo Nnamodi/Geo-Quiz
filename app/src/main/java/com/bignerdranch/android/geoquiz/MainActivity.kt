@@ -17,8 +17,8 @@ import androidx.lifecycle.ViewModelProvider
 
 private const val TAG = "MainActivity"
 private const val KEY_INDEX = "index"
-private const val SCORE_BOARD = "score"
-private const val CHEAT = "cheater"
+const val CHEAT = "cheater"
+private const val SCORE = "scores"
 private const val ANSWERED = "answered"
 private const val REQUEST_CODE_CHEAT = 0
 
@@ -29,23 +29,29 @@ class MainActivity : AppCompatActivity() {
     private lateinit var questionTextView: TextView
     private lateinit var previousButton: ImageButton
     private lateinit var cheatButton: Button
+    private lateinit var tokenTextView: TextView
     private val quizViewModel: QuizViewModel by lazy {
         ViewModelProvider(this).get(QuizViewModel::class.java)
     }
 
-    @SuppressLint("RestrictedApi") // Makes code safe for older APIs.
+    @SuppressLint("RestrictedApi", "SetTextI18n") // Makes code safe for older APIs.
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.d(TAG, "onCreate(Bundle?) called")
         setContentView(R.layout.activity_main)
         val currentIndex = savedInstanceState?.getInt(KEY_INDEX, 0) ?: 0
         quizViewModel.currentIndex = currentIndex
+        val score = savedInstanceState?.getInt(SCORE, 0) ?: 0
+        quizViewModel.score = score
+        val isCheater = savedInstanceState?.getBoolean(CHEAT, false) ?: false
+        quizViewModel.isCheater = isCheater
         trueButton = findViewById(R.id.true_button)
         falseButton = findViewById(R.id.false_button)
         nextButton = findViewById(R.id.next_button)
         questionTextView = findViewById(R.id.question_text_view)
         previousButton = findViewById(R.id.previous_button)
         cheatButton = findViewById(R.id.cheat_button)
+        tokenTextView = findViewById(R.id.token_text_view)
         trueButton.setOnClickListener {
             checkAnswer(true)
             scoreBoard(true)
@@ -77,11 +83,16 @@ class MainActivity : AppCompatActivity() {
             val intent = CheatActivity.newIntent(this@MainActivity, answerIsTrue)
             // Checks the Android Version first.
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                val options = ActivityOptions.makeClipRevealAnimation(it, 0, 0, it.width, it.height)
+                val options =
+                    ActivityOptions.makeClipRevealAnimation(it, 0, 0, it.width, it.height)
                 startActivityForResult(intent, REQUEST_CODE_CHEAT, options.toBundle())
             } else {
                 startActivityForResult(intent, REQUEST_CODE_CHEAT)
             }
+            quizViewModel.cheatToken--
+            if (quizViewModel.cheatToken < 1) cheatButton.isEnabled = false
+            val token = quizViewModel.cheatToken
+            tokenTextView.text = "Cheat Token: $token"
         }
         updateQuestion()
     }
@@ -112,9 +123,10 @@ class MainActivity : AppCompatActivity() {
         super.onSaveInstanceState(savedInstanceState)
         Log.i(TAG, "onSaveInstanceState")
         savedInstanceState.putInt(KEY_INDEX, quizViewModel.currentIndex)
+        savedInstanceState.putInt(SCORE, quizViewModel.score)
         savedInstanceState.putBoolean(CHEAT, quizViewModel.isCheater)
         savedInstanceState.putBoolean(ANSWERED, quizViewModel.questionAnswered)
-        savedInstanceState.putInt(SCORE_BOARD, quizViewModel.score)
+        savedInstanceState.putInt(CHEAT, quizViewModel.cheatToken)
     }
     override fun onStop() {
         super.onStop()
@@ -124,16 +136,17 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
         Log.d(TAG, "onDestroy() called")
     }
+    @SuppressLint("SetTextI18n")
     private fun updateQuestion() {
-        val questionTextResId = quizViewModel.currentQuestionText
-        questionTextView.setText(questionTextResId)
+        questionTextView.setText(quizViewModel.currentQuestionText)
+        val token = quizViewModel.cheatToken
+        tokenTextView.text = "Cheat Token: $token"
     }
 
     private fun checkAnswer(userAnswer: Boolean) {
         val correctAnswer = quizViewModel.currentQuestionAnswer
         trueButton.isEnabled = false
         falseButton.isEnabled = false
-        cheatButton.isEnabled = false
         quizViewModel.questionBank[quizViewModel.currentIndex].answered = true
         val messageResId = when {
             quizViewModel.isCheater -> R.string.judgement_toast
@@ -150,9 +163,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun isAnswered() {
         val isQuestionAnswered = quizViewModel.questionAnswered
-        trueButton.isEnabled = !isQuestionAnswered
-        falseButton.isEnabled = !isQuestionAnswered
-        cheatButton.isEnabled = !isQuestionAnswered
+        trueButton.isEnabled = !isQuestionAnswered // or true
+        falseButton.isEnabled = !isQuestionAnswered // or true
+        if (quizViewModel.cheatToken < 1) cheatButton.isEnabled = false
     }
 
     private fun scoreBoard(userAnswer: Boolean) {

@@ -6,7 +6,8 @@ class QuizViewModel: ViewModel() {
     var currentIndex = 0
     var score = 0
     var isCheater = false
-    var answerIsTrue = false
+    var cheatStatus = false
+    var cheatToken = 3
     val questionBank = listOf(
         Question(R.string.question_rivers, false),
         Question(R.string.question_americas, true),

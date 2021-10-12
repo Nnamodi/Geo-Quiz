@@ -20,4 +20,6 @@
     <string name="show_answer_button">Show Answer</string>
     <string name="cheat_button">Cheat!</string>
     <string name="judgement_toast">Cheating is wrong.</string>
+    <string name="cheat_token">Cheat Token</string>
+    <string name="api_level">API level</string>
 </resources>
