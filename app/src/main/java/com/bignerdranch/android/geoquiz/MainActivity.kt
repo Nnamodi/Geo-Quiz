@@ -34,7 +34,7 @@ class MainActivity : AppCompatActivity() {
         ViewModelProvider(this).get(QuizViewModel::class.java)
     }
 
-    @SuppressLint("RestrictedApi", "SetTextI18n") // Makes code safe for older APIs.
+    @SuppressLint("RestrictedApi") // Makes code safe for older APIs.
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.d(TAG, "onCreate(Bundle?) called")
@@ -91,8 +91,8 @@ class MainActivity : AppCompatActivity() {
             }
             quizViewModel.cheatToken--
             if (quizViewModel.cheatToken < 1) cheatButton.isEnabled = false
-            val token = quizViewModel.cheatToken
-            tokenTextView.text = "Cheat Token: $token"
+            val token = quizViewModel.cheatToken.toString()
+            tokenTextView.text = getString(R.string.cheat_token, token)
         }
         updateQuestion()
     }
@@ -136,11 +136,10 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
         Log.d(TAG, "onDestroy() called")
     }
-    @SuppressLint("SetTextI18n")
     private fun updateQuestion() {
         questionTextView.setText(quizViewModel.currentQuestionText)
-        val token = quizViewModel.cheatToken
-        tokenTextView.text = "Cheat Token: $token"
+        val token = quizViewModel.cheatToken.toString()
+        tokenTextView.text = getString(R.string.cheat_token, token)
     }
 
     private fun checkAnswer(userAnswer: Boolean) {

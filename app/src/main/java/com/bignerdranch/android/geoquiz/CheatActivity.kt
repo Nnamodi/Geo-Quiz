@@ -1,15 +1,14 @@
 package com.bignerdranch.android.geoquiz
 
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 
 private const val TAG = "CheatActivity"
@@ -25,7 +24,6 @@ class CheatActivity : AppCompatActivity() {
         ViewModelProvider(this).get(QuizViewModel::class.java)
     }
 
-    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.d(TAG, "onCreate(Bundle?) is called")
@@ -46,8 +44,8 @@ class CheatActivity : AppCompatActivity() {
             showAnswerButton.isEnabled = false
             cheatViewModel.cheatStatus = true
         }
-        val buildNumber = Build.VERSION.SDK_INT
-        apiLevel.text = "API Level: $buildNumber"
+        val buildNumber = Build.VERSION.SDK_INT.toString()
+        apiLevel.text = getString(R.string.api_level, buildNumber)
     }
 
     override fun onStart() {
